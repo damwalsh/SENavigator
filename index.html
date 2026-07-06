@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SE Sales Cycle Navigator — SmartBear</title>
+<style>
+  :root {
+    --navy: #1A2D5A;
+    --navy-light: #243a72;
+    --orange: #F7941D;
+    --teal: #00A9CE;
+    --teal-dark: #0088a8;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --amber: #F39C12;
+    --bg: #F4F6FA;
+    --card: #FFFFFF;
+    --border: #DDE3EE;
+    --text: #1A1F36;
+    --muted: #6B7280;
+    --shadow: 0 2px 8px rgba(26,45,90,0.10);
+    --shadow-lg: 0 8px 32px rgba(26,45,90,0.15);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Header ── */
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 32px; height: 32px; background: var(--orange); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; letter-spacing: -0.5px; }
+  .header-title { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-title span { color: var(--orange); }
+  .header-deal { display: flex; align-items: center; gap: 10px; }
+  .deal-input { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 13px; width: 220px; outline: none; }
+  .deal-input::placeholder { color: rgba(255,255,255,0.5); }
+  .deal-input:focus { background: rgba(255,255,255,0.18); border-color: var(--orange); }
+  .save-btn { background: var(--orange); color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .save-btn:hover { background: #e0840d; }
+
+  /* ── Stage Nav ── */
+  .stage-nav {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    overflow-x: auto;
+    padding: 0 24px;
+    gap: 0;
+  }
+  .stage-tab {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px 20px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    border-bottom: 3px solid transparent;
+    white-space: nowrap; transition: all 0.2s;
+    user-select: none;
+  }
+  .stage-tab:hover { color: var(--navy); }
+  .stage-tab.active { color: var(--navy); border-bottom-color: var(--orange); }
+  .stage-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--border); color: var(--muted);
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .stage-tab.active .stage-num { background: var(--orange); color: #fff; }
+  .stage-tab.done .stage-num { background: var(--green); color: #fff; }
+  .stage-tab.done { color: var(--text); }
+
+  /* ── Main Layout ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .stage-panel { display: none; }
+  .stage-panel.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--navy); display: flex; align-items: center; gap: 8px; }
+  .card-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .icon-blue { background: #EBF4FF; }
+  .icon-orange { background: #FFF3E0; }
+  .icon-teal { background: #E0F7FA; }
+  .icon-green { background: #E8F5E9; }
+  .icon-purple { background: #F3E5F5; }
+  .icon-red { background: #FFEBEE; }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── Section Label ── */
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+
+  /* ── Form Elements ── */
+  label { font-size: 12px; font-weight: 600; color: var(--text); display: block; margin-bottom: 4px; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 13px; color: var(--text);
+    background: #fff; outline: none; transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,169,206,0.12); }
+  textarea { resize: vertical; min-height: 70px; }
+  .field { margin-bottom: 12px; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-orange { background: var(--orange); color: #fff; }
+  .btn-orange:hover { background: #e0840d; }
+  .btn-teal { background: var(--teal); color: #fff; }
+  .btn-teal:hover { background: var(--teal-dark); }
+  .btn-ghost { background: transparent; color: var(--navy); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-success { background: var(--green); color: #fff; }
+
+  /* ── Tags / Badges ── */
+  .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-orange { background: #FFF3E0; color: #E65100; }
+  .badge-blue { background: #EBF4FF; color: #1565C0; }
+  .badge-green { background: #E8F5E9; color: #2E7D32; }
+  .badge-red { background: #FFEBEE; color: #C62828; }
+  .badge-amber { background: #FFF8E1; color: #F57F17; }
+  .badge-teal { background: #E0F7FA; color: #00695C; }
+  .badge-purple { background: #F3E5F5; color: #6A1B9A; }
+
+  /* ── Progress bar ── */
+  .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .fill-orange { background: var(--orange); }
+  .fill-teal { background: var(--teal); }
+  .fill-green { background: var(--green); }
+
+  /* ── PIVC Tabs ── */
+  .pivc-tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+  .pivc-tab { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
+  .pivc-tab[data-p="P"] { border-color: #E74C3C; color: #E74C3C; }
+  .pivc-tab[data-p="P"].active { background: #E74C3C; color: #fff; }
+  .pivc-tab[data-p="I"] { border-color: #F39C12; color: #F39C12; }
+  .pivc-tab[data-p="I"].active { background: #F39C12; color: #fff; }
+  .pivc-tab[data-p="V"] { border-color: var(--teal); color: var(--teal); }
+  .pivc-tab[data-p="V"].active { background: var(--teal); color: #fff; }
+  .pivc-tab[data-p="C"] { border-color: #8E44AD; color: #8E44AD; }
+  .pivc-tab[data-p="C"].active { background: #8E44AD; color: #fff; }
+
+  .q-list { display: flex; flex-direction: column; gap: 8px; }
+  .q-item { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; border-left: 4px solid; font-size: 13px; line-height: 1.4; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .q-item:hover { background: #e8edf7; }
+  .q-item.used { opacity: 0.5; text-decoration: line-through; }
+  .q-item.border-red { border-color: #E74C3C; }
+  .q-item.border-amber { border-color: #F39C12; }
+  .q-item.border-teal { border-color: var(--teal); }
+  .q-item.border-purple { border-color: #8E44AD; }
+  .copy-icon { font-size: 14px; opacity: 0.5; flex-shrink: 0; }
+
+  /* ── PIVC Tracker ── */
+  .pivc-tracker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .pivc-pill { border-radius: 8px; padding: 12px; text-align: center; }
+  .pivc-pill .pivc-letter { font-size: 22px; font-weight: 800; }
+  .pivc-pill .pivc-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0; }
+  .pivc-pill .pivc-status { font-size: 11px; }
+  .pivc-P { background: #FFEBEE; color: #C62828; }
+  .pivc-I { background: #FFF8E1; color: #F57F17; }
+  .pivc-V { background: #E0F7FA; color: #00695C; }
+  .pivc-C { background: #F3E5F5; color: #6A1B9A; }
+
+  /* ── Feature-Value Table ── */
+  .fv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .fv-table th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 6px 10px; border-bottom: 2px solid var(--border); }
+  .fv-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .fv-table tr:last-child td { border-bottom: none; }
+  .fv-table tr:hover td { background: var(--bg); }
+  .fv-table input { border: none; background: transparent; width: 100%; font-size: 13px; outline: none; }
+  .fv-table input:focus { background: #EBF4FF; border-radius: 4px; padding-left: 4px; }
+  .add-row-btn { margin-top: 10px; font-size: 12px; }
+
+  /* ── Demo Canvas ── */
+  .canvas-step { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 8px; border: 1px solid var(--border); }
+  .canvas-step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .step-1 { background: #1A2D5A; color: #fff; }
+  .step-2 { background: #E74C3C; color: #fff; }
+  .step-3 { background: var(--orange); color: #fff; }
+  .step-4 { background: var(--teal); color: #fff; }
+  .step-5 { background: var(--green); color: #fff; }
+  .canvas-step-content { flex: 1; }
+  .canvas-step-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 4px; }
+
+  /* ── ROI Calculator ── */
+  .roi-result { background: linear-gradient(135deg, var(--navy), var(--navy-light)); color: #fff; border-radius: var(--radius); padding: 20px; text-align: center; }
+  .roi-number { font-size: 42px; font-weight: 800; color: var(--orange); letter-spacing: -1px; }
+  .roi-label { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .roi-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+  .roi-item { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; }
+  .roi-item-val { font-size: 20px; font-weight: 700; }
+  .roi-item-lbl { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+  .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── Objection Cards ── */
+  .obj-item { background: var(--bg); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+  .obj-item:hover { border-color: var(--teal); }
+  .obj-item.expanded { border-color: var(--teal); background: #fff; }
+  .obj-q { font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .obj-a { font-size: 13px; color: var(--text); margin-top: 8px; line-height: 1.5; display: none; border-top: 1px solid var(--border); padding-top: 8px; }
+  .obj-item.expanded .obj-a { display: block; }
+  .obj-chevron { transition: transform 0.2s; }
+  .obj-item.expanded .obj-chevron { transform: rotate(180deg); }
+
+  /* ── Stakeholder Map ── */
+  .stakeholder-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stakeholder-role { background: var(--bg); border-radius: var(--radius-sm); padding: 12px; border: 1px solid var(--border); }
+  .role-header { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .role-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .stakeholder-list { display: flex; flex-direction: column; gap: 4px; }
+  .stakeholder-tag { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 6px; background: #fff; border-radius: 4px; border: 1px solid var(--border); }
+  .sentiment-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .s-champion { color: var(--green); }
+  .s-neutral { color: var(--amber); }
+  .s-blocker { color: var(--red); }
+  .add-stakeholder { display: flex; gap: 6px; margin-top: 6px; }
+  .add-stakeholder input { flex: 1; padding: 5px 8px; font-size: 12px; }
+  .add-stakeholder select { width: 90px; font-size: 12px; padding: 5px; }
+  .add-stakeholder button { padding: 5px 10px; font-size: 18px; border: none; background: var(--teal); color: #fff; border-radius: 4px; cursor: pointer; }
+
+  /* ── Close Checklist ── */
+  .checklist-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .checklist-item:last-child { border-bottom: none; }
+  .check-box { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all 0.2s; }
+  .check-box.checked { background: var(--green); border-color: var(--green); }
+  .check-box.checked::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 700; }
+  .check-label { font-size: 13px; line-height: 1.4; flex: 1; }
+  .check-label.done { text-decoration: line-through; color: var(--muted); }
+
+  /* ── Score gauge ── */
+  .score-ring { position: relative; width: 80px; height: 80px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: var(--navy); }
+  .score-text small { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+  /* ── Notification Toast ── */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow-lg); transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 9999; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── Misc helpers ── */
+  .flex { display: flex; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .flex-center { display: flex; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-sm { font-size: 12px; }
+  .text-muted { color: var(--muted); }
+  .text-right { text-align: right; }
+  .fw-700 { font-weight: 700; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .tip-box { background: #EBF4FF; border-left: 4px solid var(--teal); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 12px; color: #1565C0; line-height: 1.5; }
+  .warn-box { background: #FFF8E1; border-left: 4px solid var(--amber); padding: 10px 14px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 12px; color: #795548; line-height: 1.5; }
+
+  /* ── Stage Header ── */
+  .stage-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 16px 20px; background: linear-gradient(135deg, var(--navy), var(--navy-light)); border-radius: var(--radius); color: #fff; }
+  .stage-header-icon { font-size: 32px; }
+  .stage-header h2 { font-size: 20px; font-weight: 800; }
+  .stage-header p { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+  /* ── Simulation ── */
+  .sim-scenario { background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; transition: all 0.2s; }
+  .sim-scenario:hover, .sim-scenario.selected { border-color: var(--orange); background: #FFF3E0; }
+  .sim-scenario h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .sim-scenario p { font-size: 12px; color: var(--muted); }
+  .rubric-row { display: grid; grid-template-columns: 2fr repeat(4,1fr); gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .rubric-row:last-child { border-bottom: none; }
+  .rubric-row.header { font-weight: 700; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .score-btn { width: 32px; height: 32px; border: 2px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; font-weight: 700; font-size: 13px; transition: all 0.2s; text-align: center; }
+  .score-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-mark">SB</div>
+    <div class="header-title">SE Sales Cycle <span>Navigator</span></div>
+  </div>
+  <div class="header-deal">
+    <input type="text" class="deal-input" id="dealName" placeholder="Deal / Account name..." oninput="saveDealName(this.value)">
+    <button class="save-btn" onclick="saveAll()">💾 Save</button>
+  </div>
+</header>
+
+<!-- Stage Nav -->
+<nav class="stage-nav">
+  <div class="stage-tab active" onclick="switchStage(0)" id="tab-0">
+    <div class="stage-num">1</div> Discovery
+  </div>
+  <div class="stage-tab" onclick="switchStage(1)" id="tab-1">
+    <div class="stage-num">2</div> Evaluation
+  </div>
+  <div class="stage-tab" onclick="switchStage(2)" id="tab-2">
+    <div class="stage-num">3</div> Propose & Negotiate
+  </div>
+  <div class="stage-tab" onclick="switchStage(3)" id="tab-3">
+    <div class="stage-num">4</div> Deal Finalisation
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- ══════════════════════════════════════ STAGE 1: DISCOVERY ══════════════════════════════════════ -->
+<div class="stage-panel active" id="stage-0">
+  <div class="stage-header">
+    <div class="stage-header-icon">🔍</div>
+    <div>
+      <h2>Discovery</h2>
+      <p>Uncover the customer's Pain, Impact, Value potential and Confidence needs using the PIVC framework</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <!-- PIVC Tracker -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title"><span class="card-icon icon-blue">🎯</span> PIVC Coverage Tracker</div>
+          <div class="card-subtitle">Mark each dimension as you uncover it</div>
+        </div>
+      </div>
+      <div class="pivc-tracker">
+        <div class="pivc-pill pivc-P" id="pivc-P">
+          <div class="pivc-letter">P</div>
+          <div class="pivc-name">Pain</div>
+          <div class="pivc-status" id="pivc-P-status">⬜ Not yet</div>
+        </div>
+        <div class="pivc-pill pivc-I" id="pivc-I">
+          <div class="pivc-letter">I</div>
+          <div class="pivc-name">Impact</div>
+          <div class="pivc-status" id="pivc-I-status">⬜ Not yet</div>
+        </div>
+        <div class="pivc-pill pivc-V" id="pivc-V">
+          <div class="pivc-letter">V</div>
+          <div class="pivc-name">Value</div>
+          <div class="pivc-status" id="pivc-V-status">⬜ Not yet</div>
+        </div>
+        <div class="pivc-pill pivc-C" id="pivc-C">
+          <div class="pivc-letter">C</div>
+          <div class="pivc-name">Confidence</div>
+          <div class="pivc-status" id="pivc-C-status">⬜ Not yet</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="margin-top:12px;">
+        <div class="progress-fill fill-orange" id="pivc-progress" style="width:0%"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <button class="btn btn-sm btn-ghost" onclick="togglePIVC('P')">✅ Pain Found</button>
+        <button class="btn btn-sm btn-ghost" onclick="togglePIVC('I')">✅ Impact Quantified</button>
+        <button class="btn btn-sm btn-ghost" onclick="togglePIVC('V')">✅ Value Agreed</button>
+        <button class="btn btn-sm btn-ghost" onclick="togglePIVC('C')">✅ Confidence Built</button>
+      </div>
+    </div>
+
+    <!-- Discovery Notes -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-orange">📝</span> Call Notes</div>
+      </div>
+      <div class="field">
+        <label>Stated Pain (verbatim from customer)</label>
+        <textarea id="pain-note" placeholder="e.g. 'Our regression suite takes 6 hours — it blocks release every sprint...'" onchange="autoSave()"></textarea>
+      </div>
+      <div class="field">
+        <label>Quantified Impact</label>
+        <textarea id="impact-note" placeholder="e.g. '3 engineers × 6 hrs × 24 releases/yr = 432 hrs/yr'" onchange="autoSave()" style="min-height:50px;"></textarea>
+      </div>
+      <div class="field">
+        <label>Value Line (passes the "so what" test?)</label>
+        <input type="text" id="value-note" placeholder="e.g. 'Regression drops from 6 hrs to 40 min per release'" onchange="autoSave()">
+      </div>
+    </div>
+  </div>
+
+  <!-- PIVC Question Bank -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><span class="card-icon icon-teal">💬</span> PIVC Discovery Question Bank</div>
+        <div class="card-subtitle">Click a question to copy it. Mark as used to track coverage.</div>
+      </div>
+      <div class="pivc-tabs" id="pivc-filter-tabs">
+        <div class="pivc-tab active" data-p="P" onclick="filterQ('P')">P — Pain (1–5)</div>
+        <div class="pivc-tab" data-p="I" onclick="filterQ('I')">I — Impact (6–10)</div>
+        <div class="pivc-tab" data-p="V" onclick="filterQ('V')">V — Value (11–15)</div>
+        <div class="pivc-tab" data-p="C" onclick="filterQ('C')">C — Confidence (16–20)</div>
+      </div>
+    </div>
+    <div class="q-list" id="q-list"></div>
+    <div class="tip-box" style="margin-top:12px;">
+      💡 <strong>Aim for ≥3 PIVC questions</strong> before showing anything. Open with the customer's stated pain, not the product.
+    </div>
+  </div>
+
+  <!-- Discovery Scorecard -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon icon-purple">📊</span> Discovery Call Scorecard</div>
+      <div id="disco-score-display" class="badge badge-blue">Score: 0/25</div>
+    </div>
+    <div id="disco-scorecard"></div>
+    <div class="progress-bar" style="margin-top:12px;">
+      <div class="progress-fill fill-teal" id="disco-progress" style="width:0%"></div>
+    </div>
+    <div class="tip-box" style="margin-top:12px;">
+      🎯 <strong>SE effectiveness score target: 4.4/5</strong> — based on pilot data. Log coaching fields after every call.
+    </div>
+  </div>
+
+  <!-- Competitor / Context -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;"><span class="card-icon icon-red">⚔️</span> Competitor Intelligence</div>
+      <div class="field">
+        <label>Incumbent / Competitor</label>
+        <input type="text" id="competitor" placeholder="e.g. Squish, UFT, iAutomate..." onchange="autoSave()">
+      </div>
+      <div class="field">
+        <label>Primary Decision Driver</label>
+        <select id="decision-driver" onchange="autoSave()">
+          <option value="">Select...</option>
+          <option>Cost / Price</option>
+          <option>Technical fit</option>
+          <option>Integration requirements</option>
+          <option>Support / SLA</option>
+          <option>Compliance / Security</option>
+          <option>Vendor relationship</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Cost of ownership notes</label>
+        <textarea id="cost-notes" placeholder="Document TCO comparison points..." style="min-height:50px;" onchange="autoSave()"></textarea>
+      </div>
+      <div class="warn-box">⚠️ Competitor displacement is often <strong>cost-led</strong>. Prepare a TCO one-pager for Squish / UFT / iAutomate comparisons.</div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;"><span class="card-icon icon-green">🤖</span> AI / MCP Demo Opportunity</div>
+      <div class="field">
+        <label>AI/MCP relevance identified?</label>
+        <select id="ai-relevance" onchange="autoSave()">
+          <option value="">Select...</option>
+          <option>Yes — high potential</option>
+          <option>Yes — moderate</option>
+          <option>No — not applicable</option>
+          <option>Unknown — needs qualifying</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Customer's AI concern / use case</label>
+        <textarea id="ai-notes" placeholder="e.g. 'Implementation fears around MCP integration...'" style="min-height:50px;" onchange="autoSave()"></textarea>
+      </div>
+      <div class="tip-box">
+        🚀 <strong>AI/MCP demos break buyer resistance.</strong> Absa's implementation fears dissolved after a live demo. Radisson's expansion was unblocked the same way. Standardise this motion.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ STAGE 2: EVALUATION ══════════════════════════════════════ -->
+<div class="stage-panel" id="stage-1">
+  <div class="stage-header">
+    <div class="stage-header-icon">🧪</div>
+    <div>
+      <h2>Evaluation</h2>
+      <p>Plan and execute a value-based demo using the Context → Problem → Capability → Value → Proof framework</p>
+    </div>
+  </div>
+
+  <!-- Demo Planning Canvas -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <div>
+        <div class="card-title"><span class="card-icon icon-blue">🎬</span> Demo Planning Canvas</div>
+        <div class="card-subtitle">Complete 24–48 hrs before every demo. Never improvise live.</div>
+      </div>
+      <span class="badge badge-orange">Fill Before Demo</span>
+    </div>
+
+    <div class="canvas-step">
+      <div class="canvas-step-num step-1">1</div>
+      <div class="canvas-step-content">
+        <div class="canvas-step-title">Context — Set the scene</div>
+        <textarea id="demo-context" placeholder="Who is in the room? What do they care about? What did you learn in discovery?" onchange="autoSave()"></textarea>
+      </div>
+    </div>
+    <div class="canvas-step">
+      <div class="canvas-step-num step-2">2</div>
+      <div class="canvas-step-content">
+        <div class="canvas-step-title">Problem — Name their pain back to them</div>
+        <textarea id="demo-problem" placeholder="Verbatim from the discovery call. Open the demo with THIS, not a product tour." onchange="autoSave()"></textarea>
+      </div>
+    </div>
+    <div class="canvas-step">
+      <div class="canvas-step-num step-3">3</div>
+      <div class="canvas-step-content">
+        <div class="canvas-step-title">Capability — What will you show?</div>
+        <textarea id="demo-capability" placeholder="1–2 capabilities max. Tie each directly to the problem above." onchange="autoSave()"></textarea>
+      </div>
+    </div>
+    <div class="canvas-step">
+      <div class="canvas-step-num step-4">4</div>
+      <div class="canvas-step-content">
+        <div class="canvas-step-title">Value — The "so what" moment</div>
+        <input type="text" id="demo-value" placeholder="State the value line out loud: 'This means for your team...'" onchange="autoSave()">
+      </div>
+    </div>
+    <div class="canvas-step">
+      <div class="canvas-step-num step-5">5</div>
+      <div class="canvas-step-content">
+        <div class="canvas-step-title">Proof — Customer evidence</div>
+        <input type="text" id="demo-proof" placeholder="Case study, customer quote, or similar-company result to reference" onchange="autoSave()">
+      </div>
+    </div>
+
+    <div class="tip-box" style="margin-top:16px;">
+      <strong>Strong opening:</strong> "You told me releases stall for X hours waiting on regression. Let me show you exactly that scenario." — Name their pain before touching the keyboard.
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Feature → Value Translator -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-orange">⚡</span> Feature → Value Translator</div>
+      </div>
+      <table class="fv-table" id="fv-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Benefit</th>
+            <th>Value (outcome)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="fv-tbody">
+        </tbody>
+      </table>
+      <button class="btn btn-ghost btn-sm add-row-btn" onclick="addFVRow()">+ Add row</button>
+      <div class="tip-box" style="margin-top:12px;">
+        💡 Push past the benefit: <em>"So what does that mean for your team, this quarter?"</em> — that's where value lives.
+      </div>
+    </div>
+
+    <!-- Technical Qualification -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;"><span class="card-icon icon-teal">✅</span> Technical Qualification</div>
+      <div id="tech-qual-list"></div>
+      <hr class="divider">
+      <div class="field">
+        <label>POC / Trial scope agreed</label>
+        <input type="text" id="poc-scope" placeholder="What does a successful POC look like to the customer?" onchange="autoSave()">
+      </div>
+      <div class="field">
+        <label>Success criteria (customer's words)</label>
+        <textarea id="success-criteria" placeholder="'What would you need to see from us to believe this is realistic for you?'" style="min-height:50px;" onchange="autoSave()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Role-Play Scoring -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon icon-purple">🎭</span> Value Selling Simulation — Scoring Rubric</div>
+      <div id="sim-total" class="badge badge-blue">0/20</div>
+    </div>
+    <div class="section-label" style="margin-bottom:10px;">Pick a Scenario</div>
+    <div class="grid-3" style="margin-bottom:16px;">
+      <div class="sim-scenario selected" onclick="selectScenario(this,'A')">
+        <h4>Scenario A</h4>
+        <p>Manual QA team, frequent release delays, skeptical Director of Eng</p>
+      </div>
+      <div class="sim-scenario" onclick="selectScenario(this,'B')">
+        <h4>Scenario B</h4>
+        <p>Compliance-driven buyer worried about audit risk, slow approvals</p>
+      </div>
+      <div class="sim-scenario" onclick="selectScenario(this,'C')">
+        <h4>Scenario C</h4>
+        <p>Cost-conscious procurement lead comparing 3 vendors on price</p>
+      </div>
+    </div>
+    <div class="rubric-row header">
+      <div>Dimension</div><div style="text-align:center;">1</div><div style="text-align:center;">2</div><div style="text-align:center;">3</div><div style="text-align:center;">4</div>
+    </div>
+    <div id="rubric-rows"></div>
+    <div style="margin-top:12px; display:flex; align-items:center; justify-content:space-between;">
+      <div class="tip-box" style="flex:1; margin-right:12px;">Pass threshold: <strong>15/20</strong>. Re-attempt if below.</div>
+      <div id="rubric-verdict" class="badge badge-blue" style="font-size:14px; padding:6px 14px;">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ STAGE 3: PROPOSE/NEGOTIATE ══════════════════════════════════════ -->
+<div class="stage-panel" id="stage-2">
+  <div class="stage-header">
+    <div class="stage-header-icon">💼</div>
+    <div>
+      <h2>Propose & Negotiate</h2>
+      <p>Build a defensible ROI story, handle objections, and anchor the deal on business value</p>
+    </div>
+  </div>
+
+  <!-- ROI Calculator -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon icon-green">💰</span> ROI Calculator</div>
+      <span class="badge badge-teal">Light-touch — do the arithmetic out loud with the customer</span>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="section-label">Time Saved</div>
+        <div class="calc-grid">
+          <div class="field">
+            <label>Engineers involved</label>
+            <input type="number" id="roi-eng" value="3" min="0" oninput="calcROI()">
+          </div>
+          <div class="field">
+            <label>Hrs saved per release</label>
+            <input type="number" id="roi-hrs" value="6" min="0" oninput="calcROI()">
+          </div>
+          <div class="field">
+            <label>Releases per year</label>
+            <input type="number" id="roi-releases" value="24" min="0" oninput="calcROI()">
+          </div>
+          <div class="field">
+            <label>Hourly cost (£/hr)</label>
+            <input type="number" id="roi-rate" value="100" min="0" oninput="calcROI()">
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="section-label">Risk Reduction</div>
+        <div class="calc-grid">
+          <div class="field">
+            <label>Production incidents/yr</label>
+            <input type="number" id="roi-incidents" value="12" min="0" oninput="calcROI()">
+          </div>
+          <div class="field">
+            <label>Avg MTTR (hrs)</label>
+            <input type="number" id="roi-mttr" value="4" min="0" oninput="calcROI()">
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="section-label">Cost of Delay</div>
+        <div class="field">
+          <label>Revenue impact per release day delayed (£)</label>
+          <input type="number" id="roi-delay" value="40000" min="0" oninput="calcROI()">
+        </div>
+        <div class="field">
+          <label>Avg release delays avoided/yr</label>
+          <input type="number" id="roi-delays-count" value="3" min="0" oninput="calcROI()">
+        </div>
+      </div>
+      <div>
+        <div class="roi-result">
+          <div class="roi-label" style="color:rgba(255,255,255,0.6); font-size:12px; margin-bottom:4px;">TOTAL ANNUAL VALUE</div>
+          <div class="roi-number" id="roi-total">£0</div>
+          <div class="roi-label">estimated annual benefit</div>
+          <div class="roi-breakdown">
+            <div class="roi-item">
+              <div class="roi-item-val" id="roi-time-val">£0</div>
+              <div class="roi-item-lbl">Time Saved</div>
+            </div>
+            <div class="roi-item">
+              <div class="roi-item-val" id="roi-risk-val">£0</div>
+              <div class="roi-item-lbl">Risk Reduced</div>
+            </div>
+            <div class="roi-item">
+              <div class="roi-item-val" id="roi-delay-val">£0</div>
+              <div class="roi-item-lbl">Delay Avoided</div>
+            </div>
+          </div>
+        </div>
+        <div class="tip-box" style="margin-top:12px;">
+          💡 <strong>Don't build a business case — do the arithmetic out loud.</strong> Then point to a proof point showing a similar customer achieved it.
+        </div>
+        <div class="field" style="margin-top:12px;">
+          <label>Value narrative (customise before sharing)</label>
+          <textarea id="roi-narrative" placeholder="Auto-fills when you calculate..." style="min-height:80px;" onchange="autoSave()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Objection Handler -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-red">🛡️</span> Objection Handler</div>
+        <span class="badge badge-amber">PIVC-mapped responses</span>
+      </div>
+      <div id="objection-list"></div>
+    </div>
+
+    <!-- Value Cheat Sheet -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-orange">⚡</span> Value Cheat Sheet</div>
+        <span class="badge badge-teal">By persona</span>
+      </div>
+      <div class="section-label" style="margin-bottom:8px;">Select Persona</div>
+      <select id="persona-select" onchange="loadPersona(this.value)" style="margin-bottom:12px;">
+        <option value="dir-eng">Director of Engineering</option>
+        <option value="qa-lead">QA Lead / Test Manager</option>
+        <option value="ciso">CISO / Security Lead</option>
+        <option value="cto">CTO / VP Engineering</option>
+        <option value="procurement">Procurement / Finance</option>
+      </select>
+      <div id="persona-cheatsheet"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ STAGE 4: DEAL FINALISATION ══════════════════════════════════════ -->
+<div class="stage-panel" id="stage-3">
+  <div class="stage-header">
+    <div class="stage-header-icon">🏆</div>
+    <div>
+      <h2>Deal Finalisation</h2>
+      <p>Align stakeholders, build consensus, and execute a structured close plan</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-bottom:16px;">
+    <!-- Stakeholder Map -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-blue">👥</span> Stakeholder Map (DACI)</div>
+      </div>
+      <div class="stakeholder-grid" id="stakeholder-grid"></div>
+    </div>
+
+    <!-- Internal Blockers / Risks -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><span class="card-icon icon-red">⚠️</span> Risks & Blockers</div>
+      </div>
+      <div id="risk-checklist"></div>
+      <hr class="divider">
+      <div class="field">
+        <label>Other risks identified</label>
+        <textarea id="other-risks" placeholder="Document any deal-specific risks..." style="min-height:60px;" onchange="autoSave()"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Close Plan -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">
+      <div class="card-title"><span class="card-icon icon-green">✅</span> Mutual Close Plan</div>
+      <div id="close-progress-badge" class="badge badge-blue">0% complete</div>
+    </div>
+    <div id="close-checklist"></div>
+  </div>
+
+  <!-- Consensus / Strategic Summary -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;"><span class="card-icon icon-teal">📋</span> Consensus Handover Notes</div>
+      <div class="field">
+        <label>Champion name & role</label>
+        <input type="text" id="champion" placeholder="Internal champion who will sell internally for you" onchange="autoSave()">
+      </div>
+      <div class="field">
+        <label>Remaining internal skeptics</label>
+        <textarea id="skeptics" placeholder="'Who else needs convincing internally, and what will they be skeptical about?'" style="min-height:50px;" onchange="autoSave()"></textarea>
+      </div>
+      <div class="field">
+        <label>Agreed next step & date</label>
+        <input type="text" id="next-step" placeholder="e.g. 'Commercial review call — 15 July'" onchange="autoSave()">
+      </div>
+      <div class="field">
+        <label>What slows rollouts at this company?</label>
+        <textarea id="rollout-blockers" placeholder="'What's historically slowed down a rollout like this at your company?'" style="min-height:50px;" onchange="autoSave()"></textarea>
+      </div>
+    </div>
+
+    <!-- Deal Health Summary -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;"><span class="card-icon icon-purple">💎</span> Deal Health Summary</div>
+      <div id="deal-health"></div>
+      <hr class="divider">
+      <div class="field">
+        <label>Value line agreed with customer</label>
+        <input type="text" id="final-value-line" placeholder="The single sentence the customer would use to describe the win" onchange="autoSave()">
+      </div>
+      <div class="field">
+        <label>SE handover recommendation</label>
+        <select id="handover-rec" onchange="autoSave()">
+          <option value="">Select...</option>
+          <option>Proceed — strong technical fit, champion identified</option>
+          <option>Proceed with caution — risk noted</option>
+          <option>Needs more discovery before advancing</option>
+          <option>Not qualified — deprioritise</option>
+        </select>
+      </div>
+      <div class="tip-box" style="margin-top:12px;">
+        📌 Log 4-field minimum on every call: <strong>pain / product / next step / owner</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+
+const QUESTIONS = [
+  { id:1, p:'P', text:'Walk me through what happens today when [process] breaks or fails.' },
+  { id:2, p:'P', text:"What's the workaround your team uses now, and how well does it hold up?" },
+  { id:3, p:'P', text:"What's your team's biggest frustration with the current approach?" },
+  { id:4, p:'P', text:"How long has this been a problem, and what's made it more urgent recently?" },
+  { id:5, p:'P', text:"What have you already tried to fix this, and why didn't it stick?" },
+  { id:6, p:'I', text:'Who else gets pulled in when this happens, and how often?' },
+  { id:7, p:'I', text:'How many hours or people does this consume in a typical cycle?' },
+  { id:8, p:'I', text:'What\'s the knock-on effect when this slips — does it delay anything downstream?' },
+  { id:9, p:'I', text:"Is this a top-3 priority this quarter, or a background irritation?" },
+  { id:10, p:'I', text:"If this stayed exactly as-is for 12 more months, what would that cost you?" },
+  { id:11, p:'V', text:"If [the problem] dropped from X hours to Y minutes, what would that be worth?" },
+  { id:12, p:'V', text:"What would you personally focus on if this stopped eating your week?" },
+  { id:13, p:'V', text:"Is there a number — time, cost, risk — you'd need to hit to justify a change?" },
+  { id:14, p:'V', text:"Who in the business would notice if this got fixed, and what would they say?" },
+  { id:15, p:'V', text:"How would you describe the win to your own leadership if we solved this?" },
+  { id:16, p:'C', text:"What would you need to see from us to believe this is realistic for you?" },
+  { id:17, p:'C', text:"Have you been burned before by a similar promise — what went wrong?" },
+  { id:18, p:'C', text:"What would a successful proof-of-concept look like to you, specifically?" },
+  { id:19, p:'C', text:"Who else needs convincing internally, and what will they be skeptical about?" },
+  { id:20, p:'C', text:"What's historically slowed down a rollout like this at your company?" },
+];
+
+const RUBRIC_DIMS = [
+  { key:'discovery', label:'Discovery', desc:'Used ≥3 PIVC questions; uncovered a quantifiable pain' },
+  { key:'translation', label:'Translation', desc:'Stated a Feature→Value line that passes "so what"' },
+  { key:'demo', label:'Demo framing', desc:"Opened with customer's own pain, not product tour" },
+  { key:'roi', label:'ROI instinct', desc:'Offered a simple, defensible value calculation' },
+  { key:'close', label:'Close', desc:'Tied conversation back to the value uncovered' },
+];
+
+const DISCO_SCORECARD_ITEMS = [
+  { key:'opened-pain', label:'Opened by referencing customer pain (not the product)' },
+  { key:'pivc-3', label:'Asked ≥3 PIVC questions before showing anything' },
+  { key:'value-line', label:'Stated a value line out loud — passes the "so what" test' },
+  { key:'quantified', label:'Pain was quantified (time, cost, people, incidents)' },
+  { key:'close-value', label:'Closed by tying back to the number raised in discovery' },
+];
+
+const TECH_QUAL = [
+  { key:'tq-env', label:'Customer environment / tech stack understood' },
+  { key:'tq-integration', label:'Integration requirements documented' },
+  { key:'tq-security', label:'Security / compliance requirements captured' },
+  { key:'tq-champion', label:'Technical champion identified' },
+  { key:'tq-poc', label:'POC scope agreed and signed off' },
+  { key:'tq-timeline', label:'Evaluation timeline confirmed' },
+];
+
+const OBJECTIONS = [
+  { q:"We're already using [Squish / UFT / iAutomate] — why change?", a:"Cost of ownership is the primary driver for most switches. Walk through a simple TCO: licence fees + engineer time + delayed release cost. We've displaced Squish, UFT, and iAutomate across multiple accounts on this basis alone. Ask: 'If the total cost was 30% lower AND your regression time halved — what would that mean for your team?'" },
+  { q:"We've been burned by a similar tool before — the POC passed but production failed.", a:"This is a confidence objection (PIVC). Acknowledge it directly: 'That's exactly the scenario we want to avoid. Can you tell me what went wrong so we can build a POC that specifically tests those conditions?' Then define success criteria in the customer's own words and put them in writing." },
+  { q:"Your price is too high compared to competitor X.", a:"Reframe to value: 'Let's make sure we're comparing the same thing. When you include [X hrs/yr saved] × your engineering cost, the delta closes fast.' Use the ROI calculator output. Never drop price without removing scope first." },
+  { q:"We don't have budget this quarter.", a:"This is either a timing objection or a qualification signal. Ask: 'If budget were available, is this the right solution for the problem you described?' If yes, work the internal champion angle — help them build the business case using the ROI numbers we've already calculated together." },
+  { q:"We need to evaluate 3 vendors before deciding.", a:"Welcome it. Ask: 'What does an ideal outcome look like for your evaluation, and what criteria will you use to decide?' Then map your POC directly to those criteria. Ensure your demo is the last one — recency bias is real." },
+  { q:"We can build this ourselves.", a:"Build vs buy: 'What's the engineering cost to build, maintain, and update a custom solution over 3 years versus licensing ours?' Teams that build usually underestimate ongoing maintenance. Offer to run the numbers together." },
+];
+
+const PERSONAS = {
+  'dir-eng': {
+    title: 'Director of Engineering',
+    pain: 'Release velocity blocked by slow regression suites',
+    value_lines: [
+      'Regression drops from 6 hrs to 40 min — unblocks every sprint',
+      'Engineers stop firefighting and focus on feature work',
+      'Production incidents fall as untested API contracts are caught pre-release',
+    ],
+    avoid: 'Technical jargon; talk about sprint velocity and team capacity',
+  },
+  'qa-lead': {
+    title: 'QA Lead / Test Manager',
+    pain: 'Manual re-testing after every release, no time for exploratory testing',
+    value_lines: [
+      '432 hrs/yr reclaimed — shift QA to higher-value testing',
+      'Parallel execution eliminates the manual bottleneck',
+      'Test coverage increases without headcount increase',
+    ],
+    avoid: 'ROI talk — QA leads care about quality and team efficiency first',
+  },
+  'ciso': {
+    title: 'CISO / Security Lead',
+    pain: 'Audit risk from untested API contracts, slow security approvals',
+    value_lines: [
+      'Contract testing catches breaking changes before they reach production',
+      'Audit trail built into the pipeline — compliance evidence ready',
+      'Security gates shift left — no more bottleneck at the security review',
+    ],
+    avoid: 'Speed/velocity framing — lead with risk reduction and compliance',
+  },
+  'cto': {
+    title: 'CTO / VP Engineering',
+    pain: 'Release risk at scale; multiple teams, inconsistent quality',
+    value_lines: [
+      'Platform-level quality consistency across all product teams',
+      'Measurable reduction in production incidents (incidents × MTTR × cost)',
+      'Enables faster product iteration without quality regression',
+    ],
+    avoid: 'Tool-level detail — stay at platform, velocity, and risk outcomes',
+  },
+  'procurement': {
+    title: 'Procurement / Finance',
+    pain: 'Difficult to justify software spend without ROI evidence',
+    value_lines: [
+      'TCO lower than incumbent over 3 years (build the model with them)',
+      'Quantified return: £X annual benefit vs £Y licence cost',
+      'Displacement of 2 legacy tools → net cost reduction',
+    ],
+    avoid: 'Technical benefits — translate everything to £ and payback period',
+  },
+};
+
+const CLOSE_CHECKLIST_ITEMS = [
+  { key:'cc-champion', label:'Internal champion identified and briefed' },
+  { key:'cc-pain', label:'Pain quantified and agreed with champion' },
+  { key:'cc-value', label:'Value line confirmed in customer\'s own words' },
+  { key:'cc-roi', label:'ROI numbers shared and defensible' },
+  { key:'cc-poc', label:'POC / trial completed successfully against agreed criteria' },
+  { key:'cc-legal', label:'Legal / procurement engagement started' },
+  { key:'cc-timeline', label:'Mutual close timeline agreed' },
+  { key:'cc-stakeholders', label:'All key stakeholders aligned (no surprises)' },
+  { key:'cc-paper', label:'Paperwork / MSA in flight' },
+  { key:'cc-handover', label:'SE handover notes complete and logged' },
+];
+
+const RISK_ITEMS = [
+  { key:'r-champion', label:'No end-user champion identified — deal at risk', sev:'red' },
+  { key:'r-poc-history', label:'History of closed-lost POC — document why before committing SE time', sev:'amber' },
+  { key:'r-notes', label:'Call notes incomplete — 4-field minimum not met', sev:'amber' },
+  { key:'r-product-gap', label:'Product gap identified that could block deal', sev:'red' },
+  { key:'r-competitor', label:'Competitor displacement — cost-of-ownership case not yet built', sev:'amber' },
+];
+
+const DACI_ROLES = [
+  { key:'driver', label:'Driver', color:'#1A2D5A', desc:'Runs the evaluation process' },
+  { key:'approver', label:'Approver', color:'#E74C3C', desc:'Final sign-off authority' },
+  { key:'contributor', label:'Contributor', color:'#F39C12', desc:'Provides input / technical opinion' },
+  { key:'informed', label:'Informed', color:'#6B7280', desc:'Kept in the loop' },
+];
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let state = {
+  dealName: '',
+  currentStage: 0,
+  stageDone: [false, false, false, false],
+  pivc: { P: false, I: false, V: false, C: false },
+  usedQs: [],
+  activeQFilter: 'P',
+  pivcNotes: {},
+  fvRows: [{ f:'', b:'', v:'' }],
+  techQual: {},
+  discoScores: {},
+  simScores: {},
+  selectedScenario: 'A',
+  demoCanvas: {},
+  roiInputs: {},
+  objExpanded: null,
+  selectedPersona: 'dir-eng',
+  stakeholders: { driver:[], approver:[], contributor:[], informed:[] },
+  closedChecklist: {},
+  riskChecked: {},
+  closeProgress: 0,
+  dealHealth: {},
+  formFields: {},
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('se-nav-state');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+}
+
+function saveAll() {
+  localStorage.setItem('se-nav-state', JSON.stringify(state));
+  showToast('💾 Deal saved');
+}
+
+function autoSave() {
+  // Gather free-text fields
+  const ids = ['pain-note','impact-note','value-note','competitor','decision-driver','cost-notes','ai-relevance','ai-notes',
+    'demo-context','demo-problem','demo-capability','demo-value','demo-proof','poc-scope','success-criteria',
+    'roi-narrative','champion','skeptics','next-step','rollout-blockers','final-value-line','handover-rec','other-risks'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) state.formFields[id] = el.value;
+  });
+  saveAll();
+}
+
+function restoreFormFields() {
+  Object.entries(state.formFields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function switchStage(i) {
+  document.querySelectorAll('.stage-panel').forEach((p,idx) => p.classList.toggle('active', idx===i));
+  document.querySelectorAll('.stage-tab').forEach((t,idx) => t.classList.toggle('active', idx===i));
+  state.currentStage = i;
+}
+
+function saveDealName(v) { state.dealName = v; }
+
+// ═══════════════════════════════════════════
+//  PIVC
+// ═══════════════════════════════════════════
+function togglePIVC(dim) {
+  state.pivc[dim] = !state.pivc[dim];
+  updatePIVC();
+  autoSave();
+}
+function updatePIVC() {
+  const labels = { P:'✅ Found', I:'✅ Quantified', V:'✅ Agreed', C:'✅ Built' };
+  const empty = { P:'⬜ Not yet', I:'⬜ Not yet', V:'⬜ Not yet', C:'⬜ Not yet' };
+  let count = 0;
+  ['P','I','V','C'].forEach(d => {
+    const done = state.pivc[d];
+    if (done) count++;
+    document.getElementById(`pivc-${d}-status`).textContent = done ? labels[d] : empty[d];
+  });
+  document.getElementById('pivc-progress').style.width = (count/4*100)+'%';
+}
+
+// ═══════════════════════════════════════════
+//  QUESTION BANK
+// ═══════════════════════════════════════════
+const pColor = { P:'border-red', I:'border-amber', V:'border-teal', C:'border-purple' };
+
+function filterQ(p) {
+  state.activeQFilter = p;
+  document.querySelectorAll('.pivc-tab').forEach(t => t.classList.toggle('active', t.dataset.p === p));
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const list = document.getElementById('q-list');
+  const qs = QUESTIONS.filter(q => q.p === state.activeQFilter);
+  list.innerHTML = qs.map(q => `
+    <div class="q-item ${pColor[q.p]} ${state.usedQs.includes(q.id)?'used':''}" onclick="copyQ(${q.id}, this)">
+      <span>${q.text}</span>
+      <span class="copy-icon">📋</span>
+    </div>
+  `).join('');
+}
+
+function copyQ(id, el) {
+  const q = QUESTIONS.find(x => x.id===id);
+  navigator.clipboard.writeText(q.text).catch(()=>{});
+  if (!state.usedQs.includes(id)) { state.usedQs.push(id); } else { state.usedQs = state.usedQs.filter(x=>x!==id); }
+  renderQuestions();
+  showToast('📋 Question copied & marked as used');
+  autoSave();
+}
+
+// ═══════════════════════════════════════════
+//  DISCO SCORECARD
+// ═══════════════════════════════════════════
+function renderDiscoScorecard() {
+  const el = document.getElementById('disco-scorecard');
+  el.innerHTML = DISCO_SCORECARD_ITEMS.map(item => `
+    <div class="checklist-item">
+      <div class="check-box ${state.discoScores[item.key]?'checked':''}" onclick="toggleDiscoScore('${item.key}')"></div>
+      <div class="check-label ${state.discoScores[item.key]?'done':''}">${item.label}</div>
+    </div>
+  `).join('');
+  const score = Object.values(state.discoScores).filter(Boolean).length;
+  const pct = score / DISCO_SCORECARD_ITEMS.length * 100;
+  document.getElementById('disco-score-display').textContent = `Score: ${score}/${DISCO_SCORECARD_ITEMS.length}`;
+  document.getElementById('disco-progress').style.width = pct+'%';
+}
+
+function toggleDiscoScore(key) {
+  state.discoScores[key] = !state.discoScores[key];
+  renderDiscoScorecard();
+  autoSave();
+}
+
+// ═══════════════════════════════════════════
+//  FEATURE-VALUE TABLE
+// ═══════════════════════════════════════════
+function renderFVTable() {
+  const tbody = document.getElementById('fv-tbody');
+  tbody.innerHTML = state.fvRows.map((row,i) => `
+    <tr>
+      <td><input type="text" value="${row.f||''}" placeholder="e.g. Parallel test execution" oninput="updateFV(${i},'f',this.value)"></td>
+      <td><input type="text" value="${row.b||''}" placeholder="e.g. Tests run simultaneously" oninput="updateFV(${i},'b',this.value)"></td>
+      <td><input type="text" value="${row.v||''}" placeholder="e.g. Regression drops 6h → 40min" oninput="updateFV(${i},'v',this.value)"></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="removeFVRow(${i})" style="padding:4px 8px;">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+function updateFV(i, field, val) { state.fvRows[i][field] = val; autoSave(); }
+function addFVRow() { state.fvRows.push({f:'',b:'',v:''}); renderFVTable(); autoSave(); }
+function removeFVRow(i) { state.fvRows.splice(i,1); if(!state.fvRows.length) state.fvRows.push({f:'',b:'',v:''}); renderFVTable(); autoSave(); }
+
+// ═══════════════════════════════════════════
+//  TECH QUAL
+// ═══════════════════════════════════════════
+function renderTechQual() {
+  const el = document.getElementById('tech-qual-list');
+  el.innerHTML = TECH_QUAL.map(item => `
+    <div class="checklist-item">
+      <div class="check-box ${state.techQual[item.key]?'checked':''}" onclick="toggleTechQual('${item.key}')"></div>
+      <div class="check-label ${state.techQual[item.key]?'done':''}">${item.label}</div>
+    </div>
+  `).join('');
+}
+function toggleTechQual(key) { state.techQual[key] = !state.techQual[key]; renderTechQual(); autoSave(); }
+
+// ═══════════════════════════════════════════
+//  SIMULATION RUBRIC
+// ═══════════════════════════════════════════
+function renderRubric() {
+  const el = document.getElementById('rubric-rows');
+  el.innerHTML = RUBRIC_DIMS.map(dim => `
+    <div class="rubric-row">
+      <div><strong>${dim.label}</strong><br><span class="text-sm text-muted">${dim.desc}</span></div>
+      ${[1,2,3,4].map(n => `<div style="text-align:center;"><button class="score-btn ${(state.simScores[dim.key]||0)===n?'active':''}" onclick="setScore('${dim.key}',${n})">${n}</button></div>`).join('')}
+    </div>
+  `).join('');
+  updateSimTotal();
+}
+
+function setScore(key, n) {
+  state.simScores[key] = n;
+  renderRubric();
+  autoSave();
+}
+
+function updateSimTotal() {
+  const total = RUBRIC_DIMS.reduce((s,d) => s + (state.simScores[d.key]||0), 0);
+  const max = RUBRIC_DIMS.length * 4;
+  document.getElementById('sim-total').textContent = `${total}/${max}`;
+  const verdict = document.getElementById('rubric-verdict');
+  if (total === 0) { verdict.textContent = '—'; verdict.className='badge badge-blue'; }
+  else if (total >= 15) { verdict.textContent = '✅ PASS'; verdict.className='badge badge-green'; }
+  else { verdict.textContent = '❌ Re-attempt'; verdict.className='badge badge-red'; }
+}
+
+function selectScenario(el, s) {
+  document.querySelectorAll('.sim-scenario').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedScenario = s;
+  autoSave();
+}
+
+// ═══════════════════════════════════════════
+//  ROI CALCULATOR
+// ═══════════════════════════════════════════
+function calcROI() {
+  const v = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const eng = v('roi-eng'), hrs = v('roi-hrs'), releases = v('roi-releases'), rate = v('roi-rate');
+  const incidents = v('roi-incidents'), mttr = v('roi-mttr');
+  const delay = v('roi-delay'), delaysCount = v('roi-delays-count');
+
+  const timeSaved = eng * hrs * releases * rate;
+  const riskReduced = incidents * mttr * rate;
+  const delayAvoided = delay * delaysCount;
+  const total = timeSaved + riskReduced + delayAvoided;
+
+  const fmt = n => '£' + Math.round(n).toLocaleString();
+  document.getElementById('roi-time-val').textContent = fmt(timeSaved);
+  document.getElementById('roi-risk-val').textContent = fmt(riskReduced);
+  document.getElementById('roi-delay-val').textContent = fmt(delayAvoided);
+  document.getElementById('roi-total').textContent = fmt(total);
+
+  const narrative = `Based on your current setup: ${eng} engineers re-testing for ${hrs} hrs across ${releases} releases/yr saves ${Math.round(eng*hrs*releases).toLocaleString()} hrs (${fmt(timeSaved)}/yr). Reducing ${incidents} production incidents × ${mttr}hr MTTR delivers ${fmt(riskReduced)}/yr in avoided recovery cost. Eliminating ${delaysCount} release delays at ${fmt(delay)}/day impact = ${fmt(delayAvoided)}/yr saved. Total estimated annual benefit: ${fmt(total)}.`;
+  const narrativeEl = document.getElementById('roi-narrative');
+  if (narrativeEl && !state.formFields['roi-narrative']) narrativeEl.value = narrative;
+}
+
+// ═══════════════════════════════════════════
+//  OBJECTION HANDLER
+// ═══════════════════════════════════════════
+function renderObjections() {
+  const el = document.getElementById('objection-list');
+  el.innerHTML = OBJECTIONS.map((obj, i) => `
+    <div class="obj-item ${state.objExpanded===i?'expanded':''}" onclick="toggleObj(${i})">
+      <div class="obj-q">
+        <span>${obj.q}</span>
+        <span class="obj-chevron">▼</span>
+      </div>
+      <div class="obj-a">${obj.a}</div>
+    </div>
+  `).join('');
+}
+
+function toggleObj(i) {
+  state.objExpanded = state.objExpanded===i ? null : i;
+  renderObjections();
+}
+
+// ═══════════════════════════════════════════
+//  PERSONA CHEAT SHEET
+// ═══════════════════════════════════════════
+function loadPersona(key) {
+  state.selectedPersona = key;
+  const p = PERSONAS[key];
+  const el = document.getElementById('persona-cheatsheet');
+  el.innerHTML = `
+    <div class="mb-8"><span class="section-label">Primary Pain</span><div class="warn-box" style="margin-top:4px;">${p.pain}</div></div>
+    <div class="mb-8"><span class="section-label">Value Lines to Use</span>
+    ${p.value_lines.map(l => `<div class="q-item border-teal" style="margin-bottom:4px; cursor:default;">${l}</div>`).join('')}
+    </div>
+    <div><span class="section-label">Avoid</span><div class="tip-box" style="margin-top:4px;">${p.avoid}</div></div>
+  `;
+  autoSave();
+}
+
+// ═══════════════════════════════════════════
+//  STAKEHOLDER MAP
+// ═══════════════════════════════════════════
+function renderStakeholderGrid() {
+  const el = document.getElementById('stakeholder-grid');
+  el.innerHTML = DACI_ROLES.map(role => `
+    <div class="stakeholder-role">
+      <div class="role-header">
+        <div class="role-dot" style="background:${role.color}"></div>
+        <div>
+          <div style="font-size:12px; font-weight:700;">${role.label}</div>
+          <div class="text-sm text-muted">${role.desc}</div>
+        </div>
+      </div>
+      <div class="stakeholder-list" id="sh-list-${role.key}">
+        ${(state.stakeholders[role.key]||[]).map((s,i) => `
+          <div class="stakeholder-tag">
+            <div class="sentiment-dot" style="background:${s.sentiment==='champion'?'#2ECC71':s.sentiment==='blocker'?'#E74C3C':'#F39C12'}"></div>
+            <span style="flex:1;">${s.name}</span>
+            <span class="badge ${s.sentiment==='champion'?'badge-green':s.sentiment==='blocker'?'badge-red':'badge-amber'}" style="font-size:10px;">${s.sentiment}</span>
+            <span style="cursor:pointer; opacity:0.5;" onclick="removeSH('${role.key}',${i})">✕</span>
+          </div>
+        `).join('')}
+      </div>
+      <div class="add-stakeholder">
+        <input type="text" placeholder="Name..." id="sh-name-${role.key}">
+        <select id="sh-sent-${role.key}">
+          <option value="champion">Champion</option>
+          <option value="neutral" selected>Neutral</option>
+          <option value="blocker">Blocker</option>
+        </select>
+        <button onclick="addSH('${role.key}')">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addSH(role) {
+  const name = document.getElementById(`sh-name-${role}`).value.trim();
+  const sentiment = document.getElementById(`sh-sent-${role}`).value;
+  if (!name) return;
+  if (!state.stakeholders[role]) state.stakeholders[role] = [];
+  state.stakeholders[role].push({ name, sentiment });
+  renderStakeholderGrid();
+  autoSave();
+}
+
+function removeSH(role, i) {
+  state.stakeholders[role].splice(i, 1);
+  renderStakeholderGrid();
+  autoSave();
+}
+
+// ═══════════════════════════════════════════
+//  CLOSE CHECKLIST
+// ═══════════════════════════════════════════
+function renderCloseChecklist() {
+  const el = document.getElementById('close-checklist');
+  el.innerHTML = CLOSE_CHECKLIST_ITEMS.map(item => `
+    <div class="checklist-item">
+      <div class="check-box ${state.closedChecklist[item.key]?'checked':''}" onclick="toggleClose('${item.key}')"></div>
+      <div class="check-label ${state.closedChecklist[item.key]?'done':''}">${item.label}</div>
+    </div>
+  `).join('');
+  const done = Object.values(state.closedChecklist).filter(Boolean).length;
+  const pct = Math.round(done / CLOSE_CHECKLIST_ITEMS.length * 100);
+  const badge = document.getElementById('close-progress-badge');
+  if (badge) {
+    badge.textContent = `${pct}% complete`;
+    badge.className = `badge ${pct===100?'badge-green':pct>=50?'badge-teal':'badge-blue'}`;
+  }
+}
+
+function toggleClose(key) { state.closedChecklist[key] = !state.closedChecklist[key]; renderCloseChecklist(); autoSave(); }
+
+// ═══════════════════════════════════════════
+//  RISK CHECKLIST
+// ═══════════════════════════════════════════
+function renderRisks() {
+  const el = document.getElementById('risk-checklist');
+  el.innerHTML = RISK_ITEMS.map(item => `
+    <div class="checklist-item">
+      <div class="check-box ${state.riskChecked[item.key]?'checked':''}" onclick="toggleRisk('${item.key}')"></div>
+      <div style="flex:1;">
+        <div class="check-label ${state.riskChecked[item.key]?'done':''}">${item.label}</div>
+      </div>
+      <span class="badge ${item.sev==='red'?'badge-red':'badge-amber'}" style="font-size:10px;">${item.sev==='red'?'Critical':'Medium'}</span>
+    </div>
+  `).join('');
+}
+function toggleRisk(key) { state.riskChecked[key] = !state.riskChecked[key]; renderRisks(); autoSave(); }
+
+// ═══════════════════════════════════════════
+//  DEAL HEALTH
+// ═══════════════════════════════════════════
+function renderDealHealth() {
+  const el = document.getElementById('deal-health');
+  const pivcCount = Object.values(state.pivc).filter(Boolean).length;
+  const discoCount = Object.values(state.discoScores).filter(Boolean).length;
+  const techCount = Object.values(state.techQual).filter(Boolean).length;
+  const closeCount = Object.values(state.closedChecklist).filter(Boolean).length;
+  const score = Math.round((pivcCount/4*25) + (discoCount/5*25) + (techCount/6*25) + (closeCount/10*25));
+
+  const color = score >= 75 ? '#2ECC71' : score >= 40 ? '#F39C12' : '#E74C3C';
+  el.innerHTML = `
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:12px;">
+      <div class="score-ring">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="34" fill="none" stroke="#DDE3EE" stroke-width="8"/>
+          <circle cx="40" cy="40" r="34" fill="none" stroke="${color}" stroke-width="8"
+            stroke-dasharray="${2*Math.PI*34}" stroke-dashoffset="${2*Math.PI*34*(1-score/100)}"
+            stroke-linecap="round" style="transition:stroke-dashoffset 0.5s;"/>
+        </svg>
+        <div class="score-text">${score}<small>%</small></div>
+      </div>
+      <div>
+        <div style="font-size:18px; font-weight:800; color:var(--navy);">Deal Health</div>
+        <div class="text-muted text-sm">Based on PIVC, discovery, tech qual & close plan</div>
+        <div class="badge ${score>=75?'badge-green':score>=40?'badge-amber':'badge-red'}" style="margin-top:6px;">${score>=75?'Strong':'Needs work'}</div>
+      </div>
+    </div>
+    <div class="grid-2" style="gap:8px;">
+      <div style="font-size:12px;"><strong>PIVC:</strong> ${pivcCount}/4 dimensions covered</div>
+      <div style="font-size:12px;"><strong>Discovery:</strong> ${discoCount}/5 criteria met</div>
+      <div style="font-size:12px;"><strong>Tech qual:</strong> ${techCount}/6 items done</div>
+      <div style="font-size:12px;"><strong>Close plan:</strong> ${closeCount}/10 steps complete</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+function init() {
+  loadState();
+  document.getElementById('dealName').value = state.dealName || '';
+  renderQuestions();
+  updatePIVC();
+  renderDiscoScorecard();
+  renderFVTable();
+  renderTechQual();
+  renderRubric();
+  renderObjections();
+  loadPersona(state.selectedPersona || 'dir-eng');
+  document.getElementById('persona-select').value = state.selectedPersona || 'dir-eng';
+  renderStakeholderGrid();
+  renderCloseChecklist();
+  renderRisks();
+  renderDealHealth();
+  restoreFormFields();
+  calcROI();
+
+  // Auto-refresh deal health on tab switch
+  const dealHealthTab = document.getElementById('tab-3');
+  if (dealHealthTab) dealHealthTab.addEventListener('click', () => setTimeout(renderDealHealth, 50));
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
